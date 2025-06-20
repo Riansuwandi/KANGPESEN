@@ -44,6 +44,48 @@ class MenuController extends Controller
         return redirect('/')->with('success', 'Menu berhasil ditambahkan');
     }
 
+    public function edit(Menu $menu)
+    {
+        // Check staff permission
+        if (!Auth::check() || !Auth::user()->isStaff()) {
+            return redirect('/')->with('error', 'Hanya staff yang dapat mengelola menu');
+        }
+
+        return view('menu.edit', compact('menu'));
+    }
+
+    public function update(Request $request, Menu $menu)
+    {
+        // Check staff permission
+        if (!Auth::check() || !Auth::user()->isStaff()) {
+            return redirect('/')->with('error', 'Hanya staff yang dapat mengelola menu');
+        }
+
+        $validated = $request->validate([
+            'nama' => 'required|string|max:255',
+            'foto' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'harga' => 'required|numeric|min:0',
+            'desc' => 'required|string',
+            'jenis' => 'required|in:food,drink,snack',
+        ]);
+
+        // Handle foto upload
+        if ($request->hasFile('foto')) {
+            // Delete old foto if exists
+            if ($menu->foto) {
+                Storage::disk('public')->delete($menu->foto);
+            }
+
+            // Upload new foto
+            $fotoPath = $request->file('foto')->store('menu-photos', 'public');
+            $validated['foto'] = $fotoPath;
+        }
+
+        $menu->update($validated);
+
+        return redirect('/')->with('success', 'Menu berhasil diperbarui');
+    }
+
     public function destroy(Menu $menu)
     {
         // Check staff permission

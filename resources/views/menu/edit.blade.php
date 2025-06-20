@@ -133,20 +133,5 @@
             @endif
         </div>
     </div>
-
-    <script>
-        // Preview image when selected
-        document.getElementById('foto').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    // You can add image preview functionality here if needed
-                    console.log('Image selected:', file.name);
-                };
-                reader.readAsDataURL(file);
-            }
-        });
-    </script>
 </body>
 </html>

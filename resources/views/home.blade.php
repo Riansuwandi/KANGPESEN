@@ -17,7 +17,7 @@
                         <span class="text-red-500">Kang</span><br>
                         <span class="text-black">Pesen</span>
                     </div>
-                    
+
                     <!-- Navigation -->
                     <nav class="flex space-x-4">
                         <a href="/?kategori=food" class="px-6 py-2 rounded-full {{ $kategori == 'food' ? 'bg-red-400 text-white' : 'bg-gray-200 text-gray-600' }}">
@@ -31,7 +31,7 @@
                         </a>
                     </nav>
                 </div>
-                
+
                 <!-- Auth Section -->
                 <div class="flex items-center space-x-4">
                     @auth
@@ -60,8 +60,8 @@
                         @forelse($menus as $menu)
                             <div class="border border-gray-200 rounded-lg p-4 relative">
                                 <div class="flex items-start space-x-3">
-                                    <img src="{{ $menu->foto ? asset('storage/' . $menu->foto) : 'https://via.placeholder.com/80' }}" 
-                                         alt="{{ $menu->nama }}" 
+                                    <img src="{{ $menu->foto ? asset('storage/' . $menu->foto) : 'https://via.placeholder.com/80' }}"
+                                         alt="{{ $menu->nama }}"
                                          class="w-20 h-20 object-cover rounded-lg">
                                     <div class="flex-1">
                                         <h3 class="font-semibold text-gray-800">{{ $menu->nama }}</h3>
@@ -69,7 +69,7 @@
                                         <p class="text-red-500 font-semibold">Rp{{ number_format($menu->harga, 0, ',', '.') }}</p>
                                     </div>
                                 </div>
-                                
+
                                 <!-- Add Button -->
                                 @auth
                                     <form action="/add-to-order" method="POST" class="absolute top-2 right-2">
@@ -79,6 +79,17 @@
                                             +
                                         </button>
                                     </form>
+                                @endauth
+
+                                <!-- Edit Button (Staff Only) -->
+                                @auth
+                                    @if(auth()->user()->isStaff())
+                                        <a href="/menu/{{ $menu->id }}/edit"
+                                           class="absolute bottom-2 left-2 w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm hover:bg-blue-600"
+                                           title="Edit Menu">
+                                            ✎
+                                        </a>
+                                    @endif
                                 @endauth
 
                                 <!-- Delete Button (Staff Only) -->
@@ -108,13 +119,13 @@
             <div class="lg:col-span-1">
                 <div class="bg-white rounded-lg p-6">
                     <h2 class="text-xl font-semibold mb-4">My Order</h2>
-                    
+
                     @if($pesanan && $pesanan->items->count() > 0)
                         <div class="space-y-3">
                             @foreach($pesanan->items as $item)
                                 <div class="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
-                                    <img src="{{ $item->menu->foto ? asset('storage/' . $item->menu->foto) : 'https://via.placeholder.com/50' }}" 
-                                         alt="{{ $item->menu->nama }}" 
+                                    <img src="{{ $item->menu->foto ? asset('storage/' . $item->menu->foto) : 'https://via.placeholder.com/50' }}"
+                                         alt="{{ $item->menu->nama }}"
                                          class="w-12 h-12 object-cover rounded-lg">
                                     <div class="flex-1">
                                         <h4 class="font-medium text-sm">{{ $item->menu->nama }}</h4>
@@ -127,7 +138,7 @@
                                     </div>
                                 </div>
                             @endforeach
-                            
+
                             <div class="border-t pt-3">
                                 <div class="flex justify-between font-semibold">
                                     <span>Total:</span>
@@ -146,7 +157,7 @@
                                     </button>
                                 </form>
                             @endif
-                            
+
                             <a href="/confirm-order" class="block w-full bg-red-500 text-white py-3 rounded-lg font-medium text-center hover:bg-red-600">
                                 Confirm Order
                             </a>

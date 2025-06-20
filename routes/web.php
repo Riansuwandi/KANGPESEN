@@ -19,9 +19,11 @@ Route::post('/add-to-order', [HomeController::class, 'addToOrder'])->middleware(
 
 // Menu Routes (Staff Only)
 Route::middleware(['auth'])->group(function () {
-    Route::get('/menu/create', [MenuController::class, 'create']);
-    Route::post('/menu', [MenuController::class, 'store']);
-    Route::delete('/menu/{menu}', [MenuController::class, 'destroy']);
+    Route::get('/menu/create', [MenuController::class, 'create'])->name('menu.create');
+    Route::post('/menu', [MenuController::class, 'store'])->name('menu.store');
+    Route::get('/menu/{menu}/edit', [MenuController::class, 'edit'])->name('menu.edit');
+    Route::put('/menu/{menu}', [MenuController::class, 'update'])->name('menu.update');
+    Route::delete('/menu/{menu}', [MenuController::class, 'destroy'])->name('menu.destroy');
 });
 
 // Order Routes
