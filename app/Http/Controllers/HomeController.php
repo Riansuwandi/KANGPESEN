@@ -18,7 +18,6 @@ class HomeController extends Controller
 
         $pesanan = null;
         if (Auth::check()) {
-            // Get active order (pending or confirmed)
             $pesanan = Pesanan::with(['items.menu', 'meja'])
                 ->where('user_id', Auth::id())
                 ->whereIn('status', ['pending', 'confirmed'])
@@ -38,7 +37,6 @@ class HomeController extends Controller
             'menu_id' => 'required|exists:menus,id',
         ]);
 
-        // Check if user already has confirmed order
         $confirmedOrder = Pesanan::where('user_id', Auth::id())
             ->where('status', 'confirmed')
             ->first();
@@ -49,7 +47,6 @@ class HomeController extends Controller
 
         $menu = Menu::findOrFail($request->menu_id);
 
-        // Cari atau buat pesanan yang masih pending
         $pesanan = Pesanan::firstOrCreate([
             'user_id' => Auth::id(),
             'status' => 'pending'
@@ -57,7 +54,6 @@ class HomeController extends Controller
             'total_harga' => 0
         ]);
 
-        // Cek apakah item sudah ada di pesanan
         $existingItem = PesananItem::where('pesanan_id', $pesanan->id)
             ->where('menu_id', $menu->id)
             ->first();
@@ -77,11 +73,9 @@ class HomeController extends Controller
             ]);
         }
 
-        // Update total harga pesanan
         $pesanan->total_harga = $pesanan->items()->sum('subtotal');
         $pesanan->save();
 
-        // Set session untuk tracking
         session(['cart_updated' => true]);
 
         return back()->with('success', 'Item berhasil ditambahkan ke pesanan');
@@ -105,22 +99,18 @@ class HomeController extends Controller
         $pesanan = $item->pesanan;
 
         if ($item->jumlah > 1) {
-            // Kurangi jumlah
             $item->jumlah -= 1;
             $item->subtotal = $item->jumlah * $item->harga_satuan;
             $item->save();
             $message = 'Jumlah item berhasil dikurangi';
         } else {
-            // Hapus item jika jumlah = 1
             $item->delete();
             $message = 'Item berhasil dihapus dari pesanan';
         }
 
-        // Update total harga pesanan
         $pesanan->total_harga = $pesanan->items()->sum('subtotal');
         $pesanan->save();
 
-        // Jika tidak ada item lagi, hapus pesanan
         if ($pesanan->items()->count() == 0) {
             $pesanan->delete();
             return back()->with('success', 'Pesanan kosong telah dihapus');
@@ -156,8 +146,7 @@ class HomeController extends Controller
 
         $mejas = Meja::all();
 
-        // Get late orders for staff notification - with safety check
-        $lateOrders = collect(); // Empty collection as default
+        $lateOrders = collect();
 
         try {
             $lateOrders = Pesanan::with(['user', 'meja'])
@@ -165,7 +154,6 @@ class HomeController extends Controller
                 ->where('makanan_terlambat', true)
                 ->get();
         } catch (\Exception $e) {
-            // If columns don't exist yet, continue with empty collection
             \Log::warning('Column makanan_terlambat not found: ' . $e->getMessage());
         }
 

@@ -27,19 +27,16 @@ class AuthController extends Controller
         if (Auth::attempt($credentials, $remember)) {
             $request->session()->regenerate();
 
-            // Set session data
             session([
                 'user_role' => Auth::user()->role,
                 'login_time' => now(),
                 'last_activity' => now(),
             ]);
 
-            // Set cookie for remember user preference
             if ($remember) {
                 Cookie::queue('remember_user', Auth::user()->username, 60 * 24 * 30); // 30 days
             }
 
-            // Log login activity
             $this->logActivity('User logged in', Auth::user());
 
             return redirect()->intended('/')->with('success', 'Login berhasil! Selamat datang, ' . Auth::user()->username);
@@ -66,7 +63,6 @@ class AuthController extends Controller
 
         Auth::login($user);
 
-        // Set session data for new user
         session([
             'user_role' => $user->role,
             'login_time' => now(),
@@ -74,7 +70,6 @@ class AuthController extends Controller
             'is_new_user' => true,
         ]);
 
-        // Log registration activity
         $this->logActivity('User registered', $user);
 
         return redirect('/')->with('success', 'Registrasi berhasil! Selamat datang, ' . $user->username);
@@ -84,19 +79,16 @@ class AuthController extends Controller
     {
         $user = Auth::user();
 
-        // Log logout activity
         if ($user) {
             $this->logActivity('User logged out', $user);
         }
 
-        // Clear specific session data
         $request->session()->forget(['user_role', 'login_time', 'current_order_id', 'cart_updated']);
 
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        // Clear remember cookie
         Cookie::queue(Cookie::forget('remember_user'));
 
         return redirect('/')->with('success', 'Logout berhasil!');
@@ -104,7 +96,6 @@ class AuthController extends Controller
 
     private function logActivity($activity, $user)
     {
-        // Simple logging - you can extend this to store in database
         \Illuminate\Support\Facades\Log::info($activity . ' - User: ' . $user->username . ' (' . $user->role . ') at ' . now());
     }
 }

@@ -11,7 +11,6 @@ class MenuController extends Controller
 {
     public function create()
     {
-        // Check staff permission
         if (!Auth::check() || !Auth::user()->isStaff()) {
             return redirect('/')->with('error', 'Hanya staff yang dapat mengelola menu');
         }
@@ -21,7 +20,6 @@ class MenuController extends Controller
 
     public function store(Request $request)
     {
-        // Check staff permission
         if (!Auth::check() || !Auth::user()->isStaff()) {
             return redirect('/')->with('error', 'Hanya staff yang dapat mengelola menu');
         }
@@ -46,7 +44,6 @@ class MenuController extends Controller
 
     public function edit(Menu $menu)
     {
-        // Check staff permission
         if (!Auth::check() || !Auth::user()->isStaff()) {
             return redirect('/')->with('error', 'Hanya staff yang dapat mengelola menu');
         }
@@ -56,7 +53,6 @@ class MenuController extends Controller
 
     public function update(Request $request, Menu $menu)
     {
-        // Check staff permission
         if (!Auth::check() || !Auth::user()->isStaff()) {
             return redirect('/')->with('error', 'Hanya staff yang dapat mengelola menu');
         }
@@ -69,9 +65,7 @@ class MenuController extends Controller
             'jenis' => 'required|in:food,drink,snack',
         ]);
 
-        // Handle foto upload
         if ($request->hasFile('foto')) {
-            // Delete old foto if exists
             if ($menu->foto) {
                 Storage::disk('public')->delete($menu->foto);
             }
@@ -88,7 +82,6 @@ class MenuController extends Controller
 
     public function destroy(Menu $menu)
     {
-        // Check staff permission
         if (!Auth::check() || !Auth::user()->isStaff()) {
             return redirect('/')->with('error', 'Hanya staff yang dapat mengelola menu');
         }

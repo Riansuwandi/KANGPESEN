@@ -27,7 +27,6 @@ class OrderController extends Controller
             return redirect('/')->with('error', 'Tidak ada pesanan yang ditemukan');
         }
 
-        // Get available tables
         $availableTables = Meja::where('status', 'kosong')->get();
 
         return view('confirm-order', compact('pesanan', 'availableTables'));
@@ -51,7 +50,6 @@ class OrderController extends Controller
             return redirect('/')->with('error', 'Tidak ada pesanan yang ditemukan');
         }
 
-        // Check if selected table is still available
         $meja = Meja::where('id', $request->meja_id)
             ->where('status', 'kosong')
             ->first();
@@ -60,26 +58,20 @@ class OrderController extends Controller
             return back()->with('error', 'Meja yang dipilih sudah tidak tersedia');
         }
 
-        // Prepare update data
         $updateData = [
             'status' => 'confirmed',
             'meja_id' => $meja->id,
         ];
 
-        // Add waktu_konfirmasi only if column exists
         try {
             $updateData['waktu_konfirmasi'] = Carbon::now();
         } catch (\Exception $e) {
-            // Column doesn't exist yet, continue without it
         }
 
-        // Update pesanan
         $pesanan->update($updateData);
 
-        // Update status meja
         $meja->update(['status' => 'digunakan']);
 
-        // Buat transaksi
         Transaksi::create([
             'pesanan_id' => $pesanan->id,
             'total_harga' => $pesanan->total_harga,
@@ -87,7 +79,6 @@ class OrderController extends Controller
             'tanggal_bayar' => now(),
         ]);
 
-        // Set session for order tracking
         session(['current_order_id' => $pesanan->id]);
 
         return redirect('/order-status')->with('success', 'Pesanan berhasil dikonfirmasi. Meja ' . $meja->nomor_meja . ' telah dipesan untuk Anda.');
@@ -108,7 +99,6 @@ class OrderController extends Controller
             return redirect('/')->with('error', 'Tidak ada pesanan aktif yang ditemukan');
         }
 
-        // Check if order is late and set compensation - with safety check
         try {
             if (method_exists($pesanan, 'isLate') && $pesanan->isLate() && !($pesanan->kompensasi_pudding ?? false)) {
                 $pesanan->update([
@@ -117,7 +107,6 @@ class OrderController extends Controller
                 ]);
             }
         } catch (\Exception $e) {
-            // Handle case where columns don't exist yet
             \Log::warning('Error updating compensation: ' . $e->getMessage());
         }
 
@@ -160,18 +149,15 @@ class OrderController extends Controller
             return redirect('/')->with('error', 'Tidak ada pesanan yang sedang berlangsung');
         }
 
-        // Update status pesanan
         $pesanan->update([
             'status' => 'completed',
             'waktu_selesai' => Carbon::now(),
         ]);
 
-        // Update status meja
         if ($pesanan->meja) {
             $pesanan->meja->update(['status' => 'perluDiBersihkan']);
         }
 
-        // Clear session
         session()->forget('current_order_id');
 
         // Logout otomatis
@@ -184,7 +170,6 @@ class OrderController extends Controller
 
     public function finishOrder()
     {
-        // Alias untuk completeOrder untuk backward compatibility
         return $this->completeOrder();
     }
 }

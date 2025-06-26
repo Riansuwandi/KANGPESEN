@@ -8,18 +8,12 @@ use App\Models\Meja;
 
 class TableController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware(function ($request, $next) {
-            if (!Auth::check() || !Auth::user()->isStaff()) {
-                return redirect('/')->with('error', 'Hanya staff yang dapat mengelola status meja');
-            }
-            return $next($request);
-        });
-    }
-
     public function updateStatus(Request $request, Meja $meja)
     {
+        if (!Auth::check() || !Auth::user()->isStaff()) {
+            return redirect('/')->with('error', 'Hanya staff yang dapat mengelola status meja');
+        }
+
         $request->validate([
             'status' => 'required|in:kosong,digunakan,perluDiBersihkan',
         ]);
