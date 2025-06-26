@@ -15,12 +15,13 @@ class HomeController extends Controller
     {
         $kategori = $request->get('kategori', 'food');
         $menus = Menu::where('jenis', $kategori)->get();
-        
+
         $pesanan = null;
         if (Auth::check()) {
-            $pesanan = Pesanan::with('items.menu')
+            // Get active order (pending or confirmed)
+            $pesanan = Pesanan::with(['items.menu', 'meja'])
                 ->where('user_id', Auth::id())
-                ->where('status', 'pending')
+                ->whereIn('status', ['pending', 'confirmed'])
                 ->first();
         }
 
@@ -37,8 +38,17 @@ class HomeController extends Controller
             'menu_id' => 'required|exists:menus,id',
         ]);
 
+        // Check if user already has confirmed order
+        $confirmedOrder = Pesanan::where('user_id', Auth::id())
+            ->where('status', 'confirmed')
+            ->first();
+
+        if ($confirmedOrder) {
+            return back()->with('error', 'Anda sudah memiliki pesanan aktif. Selesaikan pesanan terlebih dahulu atau lihat status pesanan.');
+        }
+
         $menu = Menu::findOrFail($request->menu_id);
-        
+
         // Cari atau buat pesanan yang masih pending
         $pesanan = Pesanan::firstOrCreate([
             'user_id' => Auth::id(),
@@ -63,6 +73,7 @@ class HomeController extends Controller
                 'jumlah' => 1,
                 'harga_satuan' => $menu->harga,
                 'subtotal' => $menu->harga,
+                'makanan_datang' => false,
             ]);
         }
 
@@ -70,7 +81,71 @@ class HomeController extends Controller
         $pesanan->total_harga = $pesanan->items()->sum('subtotal');
         $pesanan->save();
 
+        // Set session untuk tracking
+        session(['cart_updated' => true]);
+
         return back()->with('success', 'Item berhasil ditambahkan ke pesanan');
+    }
+
+    public function removeFromOrder(Request $request)
+    {
+        if (!Auth::check()) {
+            return redirect()->route('login');
+        }
+
+        $request->validate([
+            'item_id' => 'required|exists:pesanan_items,id',
+        ]);
+
+        $item = PesananItem::whereHas('pesanan', function($query) {
+            $query->where('user_id', Auth::id())
+                  ->where('status', 'pending');
+        })->findOrFail($request->item_id);
+
+        $pesanan = $item->pesanan;
+
+        if ($item->jumlah > 1) {
+            // Kurangi jumlah
+            $item->jumlah -= 1;
+            $item->subtotal = $item->jumlah * $item->harga_satuan;
+            $item->save();
+            $message = 'Jumlah item berhasil dikurangi';
+        } else {
+            // Hapus item jika jumlah = 1
+            $item->delete();
+            $message = 'Item berhasil dihapus dari pesanan';
+        }
+
+        // Update total harga pesanan
+        $pesanan->total_harga = $pesanan->items()->sum('subtotal');
+        $pesanan->save();
+
+        // Jika tidak ada item lagi, hapus pesanan
+        if ($pesanan->items()->count() == 0) {
+            $pesanan->delete();
+            return back()->with('success', 'Pesanan kosong telah dihapus');
+        }
+
+        return back()->with('success', $message);
+    }
+
+    public function clearOrder()
+    {
+        if (!Auth::check()) {
+            return redirect()->route('login');
+        }
+
+        $pesanan = Pesanan::where('user_id', Auth::id())
+            ->where('status', 'pending')
+            ->first();
+
+        if ($pesanan) {
+            $pesanan->items()->delete();
+            $pesanan->delete();
+            return back()->with('success', 'Pesanan berhasil dibersihkan');
+        }
+
+        return back()->with('error', 'Tidak ada pesanan yang ditemukan');
     }
 
     public function showTableStatus()
@@ -80,6 +155,20 @@ class HomeController extends Controller
         }
 
         $mejas = Meja::all();
-        return view('table-status', compact('mejas'));
+
+        // Get late orders for staff notification - with safety check
+        $lateOrders = collect(); // Empty collection as default
+
+        try {
+            $lateOrders = Pesanan::with(['user', 'meja'])
+                ->where('status', 'confirmed')
+                ->where('makanan_terlambat', true)
+                ->get();
+        } catch (\Exception $e) {
+            // If columns don't exist yet, continue with empty collection
+            \Log::warning('Column makanan_terlambat not found: ' . $e->getMessage());
+        }
+
+        return view('table-status', compact('mejas', 'lateOrders'));
     }
 }

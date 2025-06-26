@@ -7,12 +7,12 @@
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="min-h-screen bg-gray-900">
-    <div class="min-h-screen flex items-center justify-center bg-cover bg-center relative" 
+    <div class="min-h-screen flex items-center justify-center bg-cover bg-center relative"
          style="background-image: url('https://images.unsplash.com/photo-1546069901-ba9599a7e63c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2000&q=80');">
-        
+
         <!-- Overlay -->
         <div class="absolute inset-0 bg-black bg-opacity-50"></div>
-        
+
         <!-- Login Form -->
         <div class="relative z-10 bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md mx-4">
             <!-- Tab Navigation -->
@@ -30,21 +30,28 @@
                 <form action="/login" method="POST" class="space-y-4">
                     @csrf
                     <div>
-                        <input type="text" name="username" placeholder="Enter email or username" 
-                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+                        <input type="text" name="username" placeholder="Enter email or username"
+                               value="{{ old('username', Cookie::get('remember_user', '')) }}"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                required>
                     </div>
-                    
+
                     <div class="relative">
-                        <input type="password" name="password" placeholder="Password" 
-                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+                        <input type="password" name="password" placeholder="Password"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                required>
                     </div>
-                    
-                    <div class="text-right">
+
+                    <div class="flex items-center justify-between">
+                        <label class="flex items-center">
+                            <input type="checkbox" name="remember"
+                                   {{ Cookie::get('remember_user') ? 'checked' : '' }}
+                                   class="w-4 h-4 text-blue-600 rounded focus:ring-blue-500">
+                            <span class="ml-2 text-sm text-gray-600">Remember me</span>
+                        </label>
                         <a href="#" class="text-sm text-gray-500 hover:text-gray-700">Forgot Password?</a>
                     </div>
-                    
+
                     <button type="submit" class="w-full bg-gray-800 text-white py-3 rounded-lg font-medium hover:bg-gray-700 transition-colors">
                         Log In
                     </button>
@@ -56,20 +63,20 @@
                 <form action="/register" method="POST" class="space-y-4">
                     @csrf
                     <div>
-                        <input type="text" name="username" placeholder="Enter email or username" 
-                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+                        <input type="text" name="username" placeholder="Enter email or username"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                required>
                     </div>
-                    
+
                     <div>
-                        <input type="password" name="password" placeholder="Password" 
-                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+                        <input type="password" name="password" placeholder="Password"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                required>
                     </div>
-                    
+
                     <div>
-                        <input type="password" name="password_confirmation" placeholder="Confirm Password" 
-                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+                        <input type="password" name="password_confirmation" placeholder="Confirm Password"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                required>
                     </div>
 
@@ -80,7 +87,7 @@
                             <option value="staff">Staff</option>
                         </select>
                     </div>
-                    
+
                     <button type="submit" class="w-full bg-gray-800 text-white py-3 rounded-lg font-medium hover:bg-gray-700 transition-colors">
                         Sign Up
                     </button>
@@ -110,7 +117,7 @@
             loginTab.classList.remove('text-gray-600');
             signupTab.classList.remove('bg-gray-800', 'text-white');
             signupTab.classList.add('text-gray-600');
-            
+
             loginForm.classList.remove('hidden');
             registerForm.classList.add('hidden');
         });
@@ -120,7 +127,7 @@
             signupTab.classList.remove('text-gray-600');
             loginTab.classList.remove('bg-gray-800', 'text-white');
             loginTab.classList.add('text-gray-600');
-            
+
             registerForm.classList.remove('hidden');
             loginForm.classList.add('hidden');
         });

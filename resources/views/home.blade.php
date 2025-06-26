@@ -122,45 +122,90 @@
 
                     @if($pesanan && $pesanan->items->count() > 0)
                         <div class="space-y-3">
-                            @foreach($pesanan->items as $item)
-                                <div class="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
-                                    <img src="{{ $item->menu->foto ? asset('storage/' . $item->menu->foto) : 'https://via.placeholder.com/50' }}"
-                                         alt="{{ $item->menu->nama }}"
-                                         class="w-12 h-12 object-cover rounded-lg">
-                                    <div class="flex-1">
-                                        <h4 class="font-medium text-sm">{{ $item->menu->nama }}</h4>
-                                        <p class="text-sm text-gray-600">{{ $item->menu->desc }}</p>
-                                        <p class="text-sm text-red-500">Rp{{ number_format($item->harga_satuan, 0, ',', '.') }}</p>
-                                        <p class="text-xs text-gray-500">Jumlah: {{ $item->jumlah }}</p>
-                                    </div>
-                                    <div class="text-right">
-                                        <p class="text-sm font-semibold">Rp{{ number_format($item->subtotal, 0, ',', '.') }}</p>
+                            @if($pesanan->status == 'confirmed')
+                                <!-- Show active order status -->
+                                <div class="p-4 bg-blue-50 border border-blue-200 rounded-lg mb-4">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <h4 class="font-semibold text-blue-800">Pesanan Aktif</h4>
+                                            <p class="text-sm text-blue-600">Meja: {{ $pesanan->meja->nomor_meja ?? 'N/A' }}</p>
+                                        </div>
+                                        <a href="/order-status" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-sm">
+                                            Lihat Status
+                                        </a>
                                     </div>
                                 </div>
-                            @endforeach
+                            @else
+                                @foreach($pesanan->items as $item)
+                                    <div class="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
+                                        <img src="{{ $item->menu->foto ? asset('storage/' . $item->menu->foto) : 'https://via.placeholder.com/50' }}"
+                                             alt="{{ $item->menu->nama }}"
+                                             class="w-12 h-12 object-cover rounded-lg">
+                                        <div class="flex-1">
+                                            <h4 class="font-medium text-sm">{{ $item->menu->nama }}</h4>
+                                            <p class="text-sm text-gray-600">{{ $item->menu->desc }}</p>
+                                            <p class="text-sm text-red-500">Rp{{ number_format($item->harga_satuan, 0, ',', '.') }}</p>
+                                            <div class="flex items-center space-x-2 mt-1">
+                                                <span class="text-xs text-gray-500">Jumlah:</span>
+                                                <div class="flex items-center space-x-1">
+                                                    <form action="/remove-from-order" method="POST" class="inline">
+                                                        @csrf
+                                                        <input type="hidden" name="item_id" value="{{ $item->id }}">
+                                                        <button type="submit" class="w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center text-xs hover:bg-red-600">
+                                                            -
+                                                        </button>
+                                                    </form>
+                                                    <span class="px-2 text-sm font-semibold">{{ $item->jumlah }}</span>
+                                                    <form action="/add-to-order" method="POST" class="inline">
+                                                        @csrf
+                                                        <input type="hidden" name="menu_id" value="{{ $item->menu_id }}">
+                                                        <button type="submit" class="w-5 h-5 bg-green-500 text-white rounded-full flex items-center justify-center text-xs hover:bg-green-600">
+                                                            +
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="text-right">
+                                            <p class="text-sm font-semibold">Rp{{ number_format($item->subtotal, 0, ',', '.') }}</p>
+                                        </div>
+                                    </div>
+                                @endforeach
 
-                            <div class="border-t pt-3">
-                                <div class="flex justify-between font-semibold">
-                                    <span>Total:</span>
-                                    <span>Rp{{ number_format($pesanan->total_harga, 0, ',', '.') }}</span>
+                                <div class="border-t pt-3">
+                                    <div class="flex justify-between font-semibold">
+                                        <span>Total:</span>
+                                        <span>Rp{{ number_format($pesanan->total_harga, 0, ',', '.') }}</span>
+                                    </div>
                                 </div>
-                            </div>
+                            @endif
                         </div>
 
                         <!-- Buttons -->
                         <div class="mt-6 space-y-3">
                             @if($pesanan->status == 'confirmed')
-                                <form action="/finish-order" method="POST">
+                                <a href="/order-status" class="block w-full bg-blue-500 text-white py-3 rounded-lg font-medium text-center hover:bg-blue-600">
+                                    Lihat Status Pesanan
+                                </a>
+                                <form action="/complete-order" method="POST">
                                     @csrf
-                                    <button type="submit" class="w-full bg-green-500 text-white py-3 rounded-lg font-medium hover:bg-green-600">
-                                        Finish Order
+                                    <button type="submit" class="w-full bg-green-500 text-white py-3 rounded-lg font-medium hover:bg-green-600"
+                                            onclick="return confirm('Apakah Anda yakin ingin menyelesaikan pesanan?')">
+                                        Complete Order
+                                    </button>
+                                </form>
+                            @else
+                                <a href="/confirm-order" class="block w-full bg-red-500 text-white py-3 rounded-lg font-medium text-center hover:bg-red-600">
+                                    Confirm Order
+                                </a>
+                                <form action="/clear-order" method="POST">
+                                    @csrf
+                                    <button type="submit" class="w-full bg-gray-500 text-white py-2 rounded-lg font-medium hover:bg-gray-600 text-sm"
+                                            onclick="return confirm('Apakah Anda yakin ingin menghapus semua pesanan?')">
+                                        Clear All
                                     </button>
                                 </form>
                             @endif
-
-                            <a href="/confirm-order" class="block w-full bg-red-500 text-white py-3 rounded-lg font-medium text-center hover:bg-red-600">
-                                Confirm Order
-                            </a>
                         </div>
                     @else
                         <div class="text-center py-8 text-gray-500">
