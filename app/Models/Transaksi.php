@@ -12,7 +12,7 @@ class Transaksi extends Model
     protected $fillable = [
         'pesanan_id',
         'total_harga',
-        'status', // 'pending', 'completed'
+        'status',
         'tanggal_bayar',
     ];
 

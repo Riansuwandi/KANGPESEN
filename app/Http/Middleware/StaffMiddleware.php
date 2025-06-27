@@ -16,24 +16,10 @@ class StaffMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        // Versi Simple (jika Anda ingin yang sederhana)
         if (!Auth::check() || !Auth::user()->isStaff()) {
             abort(403, 'Hanya staff yang dapat mengakses halaman ini');
         }
 
         return $next($request);
-
-        // Atau versi dengan redirect (lebih user-friendly)
-        /*
-        if (!Auth::check()) {
-            return redirect()->route('login')->with('error', 'Silakan login terlebih dahulu');
-        }
-
-        if (!Auth::user()->isStaff()) {
-            return redirect('/')->with('error', 'Hanya staff yang dapat mengakses halaman ini');
-        }
-
-        return $next($request);
-        */
     }
 }

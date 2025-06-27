@@ -13,7 +13,7 @@ class Pesanan extends Model
     protected $fillable = [
         'user_id',
         'meja_id',
-        'status', // 'pending', 'confirmed', 'completed'
+        'status',
         'total_harga',
         'waktu_konfirmasi',
         'waktu_selesai',
@@ -52,7 +52,7 @@ class Pesanan extends Model
         return $this->hasOne(Transaksi::class);
     }
 
-    // Check if order is late (more than 20 minutes)
+    // Cek time 20 menit
     public function isLate()
     {
         if (!$this->waktu_konfirmasi) {
@@ -66,7 +66,7 @@ class Pesanan extends Model
         }
     }
 
-    // Get remaining time before order is considered late
+    // cek sisa waktu konfirmasi
     public function getRemainingTime()
     {
         if (!$this->waktu_konfirmasi) {
